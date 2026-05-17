@@ -19,7 +19,7 @@ namespace SingleSignOnDemo
 
             var options = new WebApplicationOptions { Args = args };
 
-            var builder = WebApplication.CreateEmptyBuilder(options);
+            var builder = WebApplication.CreateBuilder(options);
 
             builder.Logging.AddConsole();
 
