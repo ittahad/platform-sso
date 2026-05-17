@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
@@ -22,16 +23,33 @@ namespace SingleSignOnDemo
 
             builder.Logging.AddConsole();
 
-            builder.WebHost.UseKestrelCore()
-                .UseKestrelHttpsConfiguration()
-                .ConfigureKestrel(options =>
+            var httpPort = int.Parse(Environment.GetEnvironmentVariable("HTTP_PORT") ?? "80");
+            var enableHttps = bool.Parse(Environment.GetEnvironmentVariable("ENABLE_HTTPS") ?? "false");
+            var httpsPort = int.Parse(Environment.GetEnvironmentVariable("HTTPS_PORT") ?? "443");
+
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                options.Listen(IPAddress.Any, httpPort);
+                if (enableHttps)
                 {
-                    options.Listen(IPAddress.Any, 80);
-                    options.Listen(IPAddress.Any, 443, listenOptions =>
+                    options.Listen(IPAddress.Any, httpsPort, listenOptions =>
                     {
                         //listenOptions.UseHttps("Certificates/client1.com+6.pfx", "12345");
                     });
-                });
+                }
+            });
+
+            builder.Services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders =
+                    ForwardedHeaders.XForwardedFor |
+                    ForwardedHeaders.XForwardedProto |
+                    ForwardedHeaders.XForwardedHost;
+
+                // Trust reverse proxy headers in containerized environments.
+                options.KnownNetworks.Clear();
+                options.KnownProxies.Clear();
+            });
 
             builder.Services.AddCors(options =>
             {
@@ -68,6 +86,8 @@ namespace SingleSignOnDemo
             builder.Services.AddHttpContextAccessor();
 
             var app = builder.Build();
+
+            app.UseForwardedHeaders();
 
             app.UseCors("AllowAll");
 

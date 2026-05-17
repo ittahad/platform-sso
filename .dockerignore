@@ -1,0 +1,17 @@
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/*.*proj.user
+**/*.suo
+**/*.user
+**/[Bb]in/
+**/[Oo]bj/
+**/[Ll]og/
+**/[Ll]ogs/
+**/Dockerfile*
+**/docker-compose*
+**/.dockerignore
+**/node_modules/
+**/*.md
+!**/wwwroot/**
