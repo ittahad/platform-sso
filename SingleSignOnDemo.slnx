@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SaaSDataLayer/SaaSDataLayer.csproj" Id="c4265ac1-086e-4ffb-aedd-1816800a1039" />
+  <Project Path="SingleSignOnDemo/SingleSignOnDemo.csproj" />
+</Solution>

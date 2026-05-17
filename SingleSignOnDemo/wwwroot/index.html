@@ -1,0 +1,940 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SaaS & SSO Demo</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Roboto', sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            margin: 0;
+            padding: 24px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            max-width: 1100px;
+            width: 100%;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e2a3e 0%, #0f172a 100%);
+            color: white;
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+            .header h1 {
+                margin: 0;
+                font-size: 1.6rem;
+                font-weight: 600;
+            }
+
+        .domain-info {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 14px;
+            border-radius: 60px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .client-badge {
+            background: #10b981;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .refresh-badge {
+            background: #f59e0b;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .content {
+            padding: 28px 32px;
+        }
+
+        .info-panel {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 18px 24px;
+            margin-bottom: 28px;
+            border: 1px solid #e2e8f0;
+        }
+
+            .info-panel h3 {
+                margin-top: 0;
+                margin-bottom: 16px;
+                font-weight: 600;
+                color: #0f172a;
+                border-left: 4px solid #3b82f6;
+                padding-left: 12px;
+            }
+
+        .token-data, .user-data {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin-top: 12px;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            border: 1px solid #e2edff;
+        }
+
+        .grid-2col {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin: 20px 0;
+        }
+
+        .api-section {
+            flex: 1;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 12px 20px 22px;
+            border: 1px solid #eef2f6;
+        }
+
+        button {
+            background: #3b82f6;
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.85rem;
+            margin-top: 12px;
+            margin-right: 10px;
+        }
+
+            button:hover {
+                background: #2563eb;
+                transform: translateY(-1px);
+            }
+
+            button.secondary {
+                background: #475569;
+            }
+
+            button.danger {
+                background: #dc2626;
+            }
+
+            button.warning {
+                background: #f59e0b;
+            }
+
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 14px;
+            overflow-x: auto;
+            font-size: 0.75rem;
+            margin: 12px 0 0;
+        }
+
+        .status-msg {
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: #2c3e50;
+        }
+
+        .badge {
+            background: #e6f0ff;
+            color: #1e40af;
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .expiry-warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 8px 12px;
+            margin-top: 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+        }
+
+        hr {
+            margin: 24px 0;
+            border-color: #eef2f6;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mapping-table {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 0.75rem;
+            margin-top: 16px;
+        }
+
+        .token-raw {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            color: #92400e;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            margin-top: 8px;
+            word-break: break-all;
+        }
+
+        @media (max-width: 700px) {
+            .content {
+                padding: 20px;
+            }
+
+            .grid-2col {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <div>
+                <h1>🔐 SaaS & SSO Demo</h1>
+               
+            </div>
+            <div class="domain-info" id="domainDisplay">Loading...</div>
+        </div>
+        <div class="content">
+            <div class="flex-between" style="margin-bottom: 16px;">
+                <div>
+                    <span class="badge" id="authStateBadge">⚪ Not authenticated</span>
+                    <span class="client-badge" id="clientIdBadge" style="margin-left: 8px;">Client: --</span>
+                    <span class="refresh-badge" id="refreshBadge">Refresh Token: --</span>
+                </div>
+                <div>
+                    <button id="loginBtn" class="secondary">🔑 Login / SSO</button>
+                    <button id="refreshTokenBtn" class="warning">🔄 Manual Refresh</button>
+                    <button id="logoutBtn" class="danger">🚪 Logout</button>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <h3>👤 User Information (from Access Token)</h3>
+                <div id="userInfoContainer" class="user-data">
+                    <span style="color:#94a3b8;">— Not logged in —</span>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <h3>🏢 Tenant & Vertical Information</h3>
+                <div id="tenantVerticalContainer" class="token-data">
+                    <span style="color:#94a3b8;">Waiting for authentication...</span>
+                </div>
+            </div>
+
+            <div class="grid-2col">
+                <div class="api-section">
+                    <h3>📥 GET Request</h3>
+                    <p style="font-size:0.8rem; color:#4b5563;">Fetch data from backend (auto-refresh on 401)</p>
+                    <button id="getDataBtn">📡 GET /api/protected/data</button>
+                    <div id="getResult" class="status-msg"></div>
+                    <pre id="getPreResult" style="display:none;"></pre>
+                </div>
+                <div class="api-section">
+                    <h3>📤 POST Request</h3>
+                    <p style="font-size:0.8rem; color:#4b5563;">Send data to backend (auto-refresh on 401)</p>
+                    <button id="postDataBtn">✉️ POST /api/protected/submit</button>
+                    <div id="postResult" class="status-msg"></div>
+                    <pre id="postPreResult" style="display:none;"></pre>
+                </div>
+            </div>
+
+            <!-- Token expiry info -->
+            <div id="expiryInfo" class="expiry-warning" style="display:none;"></div>
+
+            <!-- Show current domain mapping -->
+            <div class="mapping-table">
+                <strong>📋 Active Domain Mapping:</strong><br>
+                <span id="mappingInfo"></span>
+            </div>
+
+            <!-- Decoded token raw display (for debugging) -->
+            <div id="tokenDebug" style="display:none;" class="token-raw"></div>
+
+            
+        </div>
+    </div>
+
+    <script>
+        // =================================================================
+        // CONFIGURATION MAPPING - Domain/Subdomain to Client Settings
+        // =================================================================
+        const DOMAIN_CLIENT_MAPPING = {
+            "sales.brac.examr.xyz": {
+                clientId: "3a333333-3333-3333-3333-333333333333",
+                clientName: "Brac 1 (Sales)"
+            },
+            "support.brac.examr.xyz": {
+                clientId: "3b333333-3333-3333-3333-333333333333",
+                clientName: "Brac 2 (Marketing)"
+            },
+            "sales.asa.examr.xyz": {
+                clientId: "4a444444-4444-4444-4444-444444444444",
+                clientName: "Asa 1 (Sales)"
+            },
+            "support.asa.examr.xyzm": {
+                clientId: "4b444444-4444-4444-4444-444444444444",
+                clientName: "Asa 2 (Marketing)"
+            }
+        };
+
+        // Global IDP Authority
+        const IDP_AUTHORITY = "https://test.examr.xyz";
+        const SCOPES = "offline_access";  // IMPORTANT: 'offline_access' scope is required for refresh token
+
+        // Global state
+        let currentConfig = null;
+        let accessToken = null;
+        let refreshToken = null;  // Store refresh token
+        let decodedToken = null;
+        let tokenExpiryTime = null;  // Unix timestamp when token expires
+        let refreshInProgress = false;
+        let pendingRequests = [];  // Queue for requests while refreshing
+
+        // Helper functions
+        function getCurrentDomainConfig() {
+            const hostname = window.location.hostname;
+            const port = window.location.port;
+            const fullHost = port ? `${hostname}:${port}` : hostname;
+
+            let config = DOMAIN_CLIENT_MAPPING[fullHost] || DOMAIN_CLIENT_MAPPING[hostname];
+
+            if (!config) {
+                console.warn(`No mapping found for domain: ${hostname}, using default`);
+                config = {
+                    clientId: "sso_demo_client_default",
+                    clientName: "Default Client"
+                };
+            }
+
+            config.redirectUri = window.location.origin + "/";
+            return config;
+        }
+
+        // Check if token is expired or about to expire (within 60 seconds)
+        function isTokenExpired() {
+            if (!tokenExpiryTime) return true;
+            const currentTime = Math.floor(Date.now() / 1000);
+            // Consider token expired if less than 60 seconds remaining
+            return (tokenExpiryTime - currentTime) <= 60;
+        }
+
+        // Show token expiry warning
+        function updateExpiryWarning() {
+            if (tokenExpiryTime && accessToken) {
+                const currentTime = Math.floor(Date.now() / 1000);
+                const secondsRemaining = tokenExpiryTime - currentTime;
+
+                if (secondsRemaining <= 60 && secondsRemaining > 0) {
+                    $("#expiryInfo").html(`⚠️ Token expires in ${secondsRemaining} seconds. Auto-refresh will occur.`).show();
+                } else if (secondsRemaining <= 0) {
+                    $("#expiryInfo").html(`🔴 Token has expired. Refreshing...`).show();
+                } else {
+                    const minutesRemaining = Math.floor(secondsRemaining / 60);
+                    $("#expiryInfo").html(`✅ Token valid for ${minutesRemaining} more minutes`).show();
+                }
+            } else {
+                $("#expiryInfo").hide();
+            }
+        }
+
+        // Refresh token using refresh_token grant
+        async function refreshAccessToken() {
+            if (refreshInProgress) {
+                // Wait for existing refresh to complete
+                return new Promise((resolve, reject) => {
+                    pendingRequests.push({ resolve, reject });
+                });
+            }
+
+            if (!refreshToken) {
+                console.warn("No refresh token available");
+                return null;
+            }
+
+            refreshInProgress = true;
+            console.log("Refreshing access token...");
+
+            try {
+                const tokenUrl = IDP_AUTHORITY + "/connect/token";
+                const params = new URLSearchParams();
+                params.append("client_id", currentConfig.clientId);
+                params.append("grant_type", "refresh_token");
+                params.append("refresh_token", refreshToken);
+
+                const response = await fetch(tokenUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: params
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(`Refresh token failed: ${error}`);
+                }
+
+                const data = await response.json();
+
+                if (data.access_token) {
+                    // Update tokens (IDP may return new refresh token - rotating refresh token)
+                    accessToken = data.access_token;
+                    decodedToken = decodeJwt(accessToken);
+
+                    // Extract expiry from token
+                    if (decodedToken && decodedToken.exp) {
+                        tokenExpiryTime = decodedToken.exp;
+                    }
+
+                    // Update refresh token if provided (rotating refresh token)
+                    if (data.refresh_token) {
+                        refreshToken = data.refresh_token;
+                        console.log("New refresh token received (rotating refresh token)");
+                    }
+
+                    // Store updated tokens
+                    localStorage.setItem(`access_token_${currentConfig.clientId}`, accessToken);
+                    localStorage.setItem(`refresh_token_${currentConfig.clientId}`, refreshToken);
+                    localStorage.setItem(`decoded_token_${currentConfig.clientId}`, JSON.stringify(decodedToken));
+                    localStorage.setItem(`token_expiry_${currentConfig.clientId}`, tokenExpiryTime);
+
+                    updateUIFromTokens();
+                    updateExpiryWarning();
+
+                    console.log("Token refresh successful");
+
+                    // Process pending requests
+                    pendingRequests.forEach(req => req.resolve(accessToken));
+                    pendingRequests = [];
+
+                    return accessToken;
+                } else {
+                    throw new Error("No access token in refresh response");
+                }
+            } catch (error) {
+                console.error("Token refresh failed:", error);
+                // Clear all tokens on refresh failure
+                clearTokens();
+                updateUIFromTokens();
+
+                // Reject pending requests
+                pendingRequests.forEach(req => req.reject(error));
+                pendingRequests = [];
+
+                // Notify user
+                showNotification("Session expired. Please login again.", true);
+                return null;
+            } finally {
+                refreshInProgress = false;
+            }
+        }
+
+        // Wrapper for API calls with automatic refresh on 401
+        async function fetchWithAutoRefresh(url, options) {
+            const makeRequest = async (token) => {
+                const headers = {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                };
+
+                const requestOptions = { ...options, headers };
+                const response = await fetch(url, requestOptions);
+
+                if (response.status === 401) {
+                    // Token expired, try to refresh
+                    console.log("Received 401, attempting token refresh...");
+                    const newToken = await refreshAccessToken();
+                    if (newToken) {
+                        // Retry with new token
+                        const retryHeaders = {
+                            "Authorization": `Bearer ${newToken}`,
+                            "Content-Type": "application/json"
+                        };
+                        const retryOptions = { ...options, headers: retryHeaders };
+                        return await fetch(url, retryOptions);
+                    } else {
+                        throw new Error("Unable to refresh token");
+                    }
+                }
+
+                return response;
+            };
+
+            // Check if token is expired before making request
+            if (accessToken && isTokenExpired()) {
+                console.log("Token expired, refreshing before request...");
+                await refreshAccessToken();
+            }
+
+            if (!accessToken) {
+                throw new Error("No access token available");
+            }
+
+            return await makeRequest(accessToken);
+        }
+
+        // Show notification
+        function showNotification(message, isError = false) {
+            const notification = $('<div>')
+                .css({
+                    position: 'fixed',
+                    top: '20px',
+                    right: '20px',
+                    background: isError ? '#dc2626' : '#10b981',
+                    color: 'white',
+                    padding: '12px 20px',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    zIndex: 1000,
+                    animation: 'slideIn 0.3s ease-out'
+                })
+                .text(message);
+            $('body').append(notification);
+            setTimeout(() => notification.fadeOut(300, () => notification.remove()), 3000);
+        }
+
+        // Clear all tokens
+        function clearTokens() {
+            accessToken = null;
+            refreshToken = null;
+            decodedToken = null;
+            tokenExpiryTime = null;
+            localStorage.removeItem(`access_token_${currentConfig.clientId}`);
+            localStorage.removeItem(`refresh_token_${currentConfig.clientId}`);
+            localStorage.removeItem(`decoded_token_${currentConfig.clientId}`);
+            localStorage.removeItem(`token_expiry_${currentConfig.clientId}`);
+        }
+
+        // PKCE Helpers
+        function generateCodeVerifier(length = 64) {
+            const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+            let verifier = "";
+            for (let i = 0; i < length; i++) {
+                verifier += possible.charAt(Math.floor(Math.random() * possible.length));
+            }
+            return verifier;
+        }
+
+        async function generateCodeChallenge(verifier) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(verifier);
+            const digest = await crypto.subtle.digest("SHA-256", data);
+            return base64UrlEncode(new Uint8Array(digest));
+        }
+
+        function base64UrlEncode(buffer) {
+            let str = String.fromCharCode.apply(null, buffer);
+            return btoa(str)
+                .replace(/\+/g, "-")
+                .replace(/\//g, "_")
+                .replace(/=+$/, "");
+        }
+
+        function setVerifier(verifier) {
+            localStorage.setItem(`pkce_verifier_${currentConfig.clientId}`, verifier);
+        }
+
+        function getAndClearVerifier() {
+            const verifier = localStorage.getItem(`pkce_verifier_${currentConfig.clientId}`);
+            localStorage.removeItem(`pkce_verifier_${currentConfig.clientId}`);
+            return verifier;
+        }
+
+        function decodeJwt(token) {
+            if (!token) return null;
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) {
+                    console.warn("Invalid JWT format");
+                    return null;
+                }
+                const base64Url = parts[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.warn("JWT parse error", e);
+                return null;
+            }
+        }
+
+        async function redirectToLogin() {
+            const verifier = generateCodeVerifier();
+            const challenge = await generateCodeChallenge(verifier);
+            setVerifier(verifier);
+
+            const authUrl = new URL(IDP_AUTHORITY + "/connect/authorize");
+            authUrl.searchParams.append("client_id", currentConfig.clientId);
+            authUrl.searchParams.append("response_type", "code");
+            authUrl.searchParams.append("redirect_uri", currentConfig.redirectUri);
+            authUrl.searchParams.append("scope", SCOPES);  // 'offline_access' is critical here
+            authUrl.searchParams.append("code_challenge", challenge);
+            authUrl.searchParams.append("code_challenge_method", "S256");
+            authUrl.searchParams.append("state", Math.random().toString(36).substring(2));
+
+            window.location.href = authUrl.toString();
+        }
+
+        async function exchangeCodeForToken(code, verifier) {
+            const tokenUrl = IDP_AUTHORITY + "/connect/token";
+            const params = new URLSearchParams();
+            params.append("client_id", currentConfig.clientId);
+            params.append("grant_type", "authorization_code");
+            params.append("code", code);
+            params.append("redirect_uri", currentConfig.redirectUri);
+            params.append("code_verifier", verifier);
+
+            const response = await fetch(tokenUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: params
+            });
+
+            if (!response.ok) {
+                const err = await response.text();
+                throw new Error(`Token exchange failed: ${err}`);
+            }
+
+            const data = await response.json();
+            if (data.access_token) {
+                accessToken = data.access_token;
+                decodedToken = decodeJwt(accessToken);
+
+                // Store refresh token if provided
+                if (data.refresh_token) {
+                    refreshToken = data.refresh_token;
+                    console.log("Refresh token received");
+                }
+
+                // Extract expiry from token
+                if (decodedToken && decodedToken.exp) {
+                    tokenExpiryTime = decodedToken.exp;
+                }
+
+                // Store tokens
+                localStorage.setItem(`access_token_${currentConfig.clientId}`, accessToken);
+                if (refreshToken) localStorage.setItem(`refresh_token_${currentConfig.clientId}`, refreshToken);
+                localStorage.setItem(`decoded_token_${currentConfig.clientId}`, JSON.stringify(decodedToken));
+                if (tokenExpiryTime) localStorage.setItem(`token_expiry_${currentConfig.clientId}`, tokenExpiryTime);
+
+                // Clear URL parameters
+                window.history.replaceState({}, document.title, window.location.pathname);
+                updateUIFromTokens();
+                updateExpiryWarning();
+
+                // Start auto-refresh timer (refresh 60 seconds before expiry)
+                scheduleAutoRefresh();
+
+                return true;
+            }
+            return false;
+        }
+
+        // Schedule automatic token refresh before expiry
+        function scheduleAutoRefresh() {
+            if (tokenExpiryTime) {
+                const currentTime = Math.floor(Date.now() / 1000);
+                const timeUntilExpiry = tokenExpiryTime - currentTime;
+                const refreshTime = Math.max(0, (timeUntilExpiry - 60)) * 1000; // Refresh 60 seconds before expiry
+
+                if (refreshTime > 0 && refreshTime < 3600000) { // Only schedule if less than 1 hour
+                    setTimeout(() => {
+                        console.log("Auto-refreshing token before expiry");
+                        refreshAccessToken();
+                    }, refreshTime);
+                }
+            }
+        }
+
+        async function handleOAuthCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get("code");
+            const error = urlParams.get("error");
+
+            if (error) {
+                console.error("OAuth error:", error);
+                $("#userInfoContainer").html(`<span style="color:red;">Login error: ${error}</span>`);
+                return false;
+            }
+
+            if (code) {
+                const verifier = getAndClearVerifier();
+                if (!verifier) {
+                    console.warn("Missing PKCE verifier");
+                    return false;
+                }
+                try {
+                    await exchangeCodeForToken(code, verifier);
+                    return true;
+                } catch (ex) {
+                    console.error("Token exchange error", ex);
+                    $("#userInfoContainer").html(`<span style="color:red;">Token exchange failed: ${ex.message}</span>`);
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        function loadStoredTokens() {
+            const storedAccess = localStorage.getItem(`access_token_${currentConfig.clientId}`);
+            const storedRefresh = localStorage.getItem(`refresh_token_${currentConfig.clientId}`);
+            const storedDecoded = localStorage.getItem(`decoded_token_${currentConfig.clientId}`);
+            const storedExpiry = localStorage.getItem(`token_expiry_${currentConfig.clientId}`);
+
+            if (storedAccess) {
+                accessToken = storedAccess;
+                refreshToken = storedRefresh;
+                decodedToken = storedDecoded ? JSON.parse(storedDecoded) : decodeJwt(accessToken);
+                tokenExpiryTime = storedExpiry ? parseInt(storedExpiry) : (decodedToken?.exp || null);
+                updateUIFromTokens();
+                updateExpiryWarning();
+                scheduleAutoRefresh();
+                return true;
+            }
+            return false;
+        }
+
+        function updateUIFromTokens() {
+            let userHtml = "";
+            let tenantVerticalHtml = "";
+
+            if (accessToken && decodedToken) {
+                const userName = decodedToken.d_n || decodedToken.name || decodedToken.preferred_username || decodedToken.sub || 'N/A';
+                const email = decodedToken.email || 'not provided';
+                const phoneNumber = decodedToken.phone_number || 'not provided';
+                const roles = decodedToken.role || [];
+                const userId = decodedToken.sub || 'N/A';
+
+                userHtml = `
+                            <div><strong>👤 Display Name (d_n):</strong> ${userName}</div>
+                            <div><strong>📧 Email:</strong> ${email}</div>
+                            <div><strong>📱 Phone:</strong> ${phoneNumber}</div>
+                            <div><strong>🆔 User ID (sub):</strong> ${userId}</div>
+                            <div><strong>🎭 Roles:</strong> ${Array.isArray(roles) ? roles.join(', ') : roles}</div>
+                            <div><strong>🏢 Client:</strong> ${currentConfig.clientName}</div>
+                            <div><strong>🔑 Client ID:</strong> ${decodedToken.client_id || currentConfig.clientId}</div>
+                        `;
+
+                const tenantId = decodedToken.t_id || 'Not specified';
+                const verticalId = decodedToken.v_id || 'Not specified';
+                const orgId = decodedToken.oi_prst || 'Not specified';
+                const sessionId = decodedToken.s_id || 'Not specified';
+
+                tenantVerticalHtml = `
+                            <div><strong>🏛️ Tenant ID (t_id):</strong> <code>${tenantId}</code></div>
+                            <div><strong>📂 Vertical ID (v_id):</strong> <code>${verticalId}</code></div>
+                            <div><strong>🏢 Organization (oi_prst):</strong> <code>${orgId}</code></div>
+                            <div><strong>🔖 Session ID (s_id):</strong> <code>${sessionId}</code></div>
+                            <div><strong>🌐 Domain:</strong> ${window.location.hostname}</div>
+                            <div><strong>🔐 Issuer:</strong> ${decodedToken.iss || 'N/A'}</div>
+                            <div><strong>⏰ Token Expiry:</strong> ${tokenExpiryTime ? new Date(tokenExpiryTime * 1000).toLocaleString() : 'N/A'}</div>
+                        `;
+
+                $("#tokenDebug").html(`<strong>📝 Decoded Access Token:</strong><br>${JSON.stringify(decodedToken, null, 2)}`).show();
+                $("#refreshBadge").text(refreshToken ? "Refresh Token: ✅ Available" : "Refresh Token: ❌ Not available");
+            } else {
+                userHtml = '<span style="color:#94a3b8;">Not authenticated — please login</span>';
+                tenantVerticalHtml = '<span style="color:#94a3b8;">Login to see tenant/vertical information from access token</span>';
+                $("#tokenDebug").hide();
+                $("#refreshBadge").text("Refresh Token: --");
+            }
+
+            $("#userInfoContainer").html(userHtml);
+            $("#tenantVerticalContainer").html(tenantVerticalHtml);
+            $("#authStateBadge").html(accessToken ? "🟢 Authenticated (Access Token)" : "⚪ Not authenticated");
+            $("#clientIdBadge").text(`Client: ${currentConfig.clientName}`);
+        }
+
+        async function callApi(method, url, body = null) {
+            if (!accessToken) {
+                throw new Error("No access token. Please login first.");
+            }
+
+            const headers = {
+                "Authorization": `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            };
+
+            const options = { method, headers };
+            if (body && method !== "GET") {
+                options.body = JSON.stringify(body);
+            }
+
+            // Use fetchWithAutoRefresh for automatic token refresh on 401
+            const response = await fetchWithAutoRefresh(url, options);
+
+            if (!response.ok) {
+                let errorText = await response.text().catch(() => "");
+                throw new Error(`API error ${response.status}: ${errorText}`);
+            }
+            return response.status === 204 ? null : await response.json();
+        }
+
+        async function performGet() {
+            if (!accessToken) {
+                $("#getResult").html("❌ Please login first.");
+                $("#getPreResult").hide();
+                return;
+            }
+
+            const apiUrl = `${currentConfig.redirectUri}protected/data`;
+            $("#getResult").html("⏳ Fetching data with Bearer token (auto-refresh enabled)...");
+
+            try {
+                const data = await callApi("GET", apiUrl);
+                $("#getResult").html("✅ GET successful");
+                $("#getPreResult").show().text(JSON.stringify(data, null, 2));
+                updateExpiryWarning();
+            } catch (err) {
+                $("#getResult").html(`❌ GET error: ${err.message}`);
+                $("#getPreResult").hide();
+            }
+        }
+
+        async function performPost() {
+            if (!accessToken) {
+                $("#postResult").html("❌ Please login first.");
+                $("#postPreResult").hide();
+                return;
+            }
+
+            const samplePayload = {
+                message: `Hello from ${window.location.hostname} (${currentConfig.clientName})`,
+                timestamp: new Date().toISOString(),
+                tenantId: decodedToken?.t_id,
+                verticalId: decodedToken?.v_id,
+                userId: decodedToken?.sub,
+                displayName: decodedToken?.d_n
+            };
+
+            const apiUrl = `${currentConfig.redirectUri}protected/submit`;
+            $("#postResult").html("⏳ Sending POST with Bearer token (auto-refresh enabled)...");
+
+            try {
+                const responseData = await callApi("POST", apiUrl, samplePayload);
+                $("#postResult").html("✅ POST successful");
+                $("#postPreResult").show().text(JSON.stringify(responseData, null, 2));
+                updateExpiryWarning();
+            } catch (err) {
+                $("#postResult").html(`❌ POST error: ${err.message}`);
+                $("#postPreResult").hide();
+            }
+        }
+
+        async function manualRefresh() {
+            if (!refreshToken) {
+                showNotification("No refresh token available. Please login again.", true);
+                return;
+            }
+            showNotification("Manually refreshing token...", false);
+            await refreshAccessToken();
+            if (accessToken) {
+                showNotification("Token refreshed successfully!", false);
+            }
+        }
+
+        function logout() {
+            clearTokens();
+            updateUIFromTokens();
+            updateExpiryWarning();
+
+            if (confirm("Clear local session. Logout from IDP as well?")) {
+                const logoutUrl = IDP_AUTHORITY + "/connect/endsession?client_id=" + currentConfig.clientId + "&post_logout_redirect_uri=" + encodeURIComponent(window.location.origin);
+                window.location.href = logoutUrl;
+            }
+        }
+
+        function displayMappingInfo() {
+            const mappingInfo = `
+                        <strong>Current domain:</strong> ${window.location.hostname}<br>
+                        <strong>Mapped client:</strong> ${currentConfig.clientName} (${currentConfig.clientId})<br>
+                        <strong>Redirect URI:</strong> ${currentConfig.redirectUri}<br>
+                        <strong>Refresh Token Support:</strong> ✅ Enabled (rotating refresh token)<br>
+                        <strong>Auto-Refresh:</strong> Automatic on 401 or before expiry<br>
+                        <strong>Expected token claims:</strong> t_id (tenant), v_id (vertical), d_n (display name)
+                    `;
+            $("#mappingInfo").html(mappingInfo);
+            $("#domainDisplay").html(`🌐 ${window.location.hostname} → ${currentConfig.clientName}`);
+        }
+
+        // Initialize the application
+        (async function init() {
+            currentConfig = getCurrentDomainConfig();
+            displayMappingInfo();
+
+            const processed = await handleOAuthCallback();
+            if (!processed) {
+                loadStoredTokens();
+            }
+
+            $("#loginBtn").on("click", (e) => {
+                e.preventDefault();
+                redirectToLogin();
+            });
+
+            $("#refreshTokenBtn").on("click", (e) => {
+                e.preventDefault();
+                manualRefresh();
+            });
+
+            $("#logoutBtn").on("click", (e) => {
+                e.preventDefault();
+                logout();
+            });
+
+            $("#getDataBtn").on("click", performGet);
+            $("#postDataBtn").on("click", performPost);
+
+            // Refresh token expiry display every 5 seconds
+            setInterval(updateExpiryWarning, 5000);
+
+            console.log(`✅ Initialized for domain: ${window.location.hostname}`, currentConfig);
+            if (decodedToken) {
+                console.log("✅ Decoded access token:", decodedToken);
+                console.log("✅ Refresh token available:", !!refreshToken);
+            }
+        })();
+    </script>
+</body>>
+</html>
