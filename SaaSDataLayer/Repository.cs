@@ -53,8 +53,8 @@ namespace SaaSDataLayer
                 ApplicationDate = DateTime.UtcNow,
                 TenantId = userContext.TenantId,
                 VerticalId = userContext.VerticalId,
-                ClientId = userContext.ClientId
-
+                ClientId = userContext.ClientId,
+                LastModifiedBy = userContext.Email
             };
 
             return MongoDbConnectionCache
