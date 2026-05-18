@@ -11,3 +11,8 @@ services:
       ENABLE_HTTPS: "false"
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+          cpus: "0.05"
