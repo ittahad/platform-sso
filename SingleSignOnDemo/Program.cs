@@ -6,6 +6,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using SaaSDataLayer;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using static SaaSDataLayer.MongoDbConnectionCache;
 
@@ -73,6 +74,12 @@ namespace SingleSignOnDemo
                 {
                     ValidateAudience = false,
                 };
+
+                TokenHandler tokenHandler = jwtBearerOptions.TokenHandlers.First();
+
+                JwtSecurityTokenHandler jwtSecurityTokenHandler = tokenHandler as JwtSecurityTokenHandler;
+
+                jwtSecurityTokenHandler.InboundClaimTypeMap.Clear();
             });
 
             builder.Services.AddAuthorization();
