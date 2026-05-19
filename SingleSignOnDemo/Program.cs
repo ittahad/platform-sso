@@ -76,6 +76,11 @@ namespace SingleSignOnDemo
                     ValidateAudience = false,
                 };
 
+                jwtBearerOptions.MapInboundClaims = false;
+
+                JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
+                JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
                 TokenHandler tokenHandler = jwtBearerOptions.TokenHandlers.First();
 
                 JsonWebTokenHandler jsonWebTokenHandler = tokenHandler as JsonWebTokenHandler;

@@ -10,10 +10,10 @@ namespace SingleSignOnDemo
 
             return new UserContext
             {
-                TenantId = claims.First(c => c.Type == "v_id")?.Value,
-                VerticalId = claims.First(c => c.Type == "t_id")?.Value,
-                ClientId = claims.First(c => c.Type == "client_id")?.Value,
-                Email = claims.First(c => c.Type == "email")?.Value
+                TenantId = claims.FirstOrDefault(c => c.Type == "v_id")?.Value,
+                VerticalId = claims.FirstOrDefault(c => c.Type == "t_id")?.Value,
+                ClientId = claims.FirstOrDefault(c => c.Type == "client_id")?.Value,
+                Email = claims.FirstOrDefault(c => c.Type == "email")?.Value
             };
         }
     }
