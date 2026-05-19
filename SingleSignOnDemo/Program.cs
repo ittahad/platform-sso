@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -77,9 +78,9 @@ namespace SingleSignOnDemo
 
                 TokenHandler tokenHandler = jwtBearerOptions.TokenHandlers.First();
 
-                JwtSecurityTokenHandler jwtSecurityTokenHandler = tokenHandler as JwtSecurityTokenHandler;
+                JsonWebTokenHandler jsonWebTokenHandler = tokenHandler as JsonWebTokenHandler;
 
-                jwtSecurityTokenHandler.InboundClaimTypeMap.Clear();
+                jsonWebTokenHandler.InboundClaimTypeMap.Clear();
             });
 
             builder.Services.AddAuthorization();
